@@ -163,6 +163,23 @@ button[type="submit"]:active {
     font-size: 20px;
 }
 
+.question-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px; /* 数字と本文の間隔 */
+}
+
+.question-number {
+    font-weight: bold;
+    flex-shrink: 0; /* 数字部分が潰れないようにする */
+}
+
+.question-text {
+    margin: 0;
+    line-height: 1.6;
+    white-space: normal;
+}
+
 /* スマホ向け微調整 */
 @media (max-width: 600px) {
     .card {

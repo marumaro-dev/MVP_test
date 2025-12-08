@@ -50,32 +50,29 @@ shuffled.forEach((q, index) => {
     const textHtml = q.text.replace(/\n/g, "<br>");
 
     div.innerHTML = `
-    <p class="question-text">
-      <span class="question-number">${index + 1}.</span>${textHtml}
-    </p>
-    <div class="options">
-      <label class="option-label">
-        <input type="radio" name="q${q.id}" value="-2">
-        まったくそう思わない
-      </label>
-      <label class="option-label">
-        <input type="radio" name="q${q.id}" value="-1">
-        あまりそう思わない
-      </label>
-      <label class="option-label">
-        <input type="radio" name="q${q.id}" value="0">
-        どちらともいえない
-      </label>
-      <label class="option-label">
-        <input type="radio" name="q${q.id}" value="1">
-        そう思う
-      </label>
-      <label class="option-label">
-        <input type="radio" name="q${q.id}" value="2">
-        とてもそう思う
-      </label>
-    </div>
-  `;
+    <div class="question-row">
+    <span class="question-number">${index + 1}.</span>
+    <p class="question-text">${textHtml}</p>
+  </div>
+
+  <div class="options">
+    <label class="option-label">
+      <input type="radio" name="q${q.id}" value="-2"> まったくそう思わない
+    </label>
+    <label class="option-label">
+      <input type="radio" name="q${q.id}" value="-1"> あまりそう思わない
+    </label>
+    <label class="option-label">
+      <input type="radio" name="q${q.id}" value="0"> どちらともいえない
+    </label>
+    <label class="option-label">
+      <input type="radio" name="q${q.id}" value="1"> そう思う
+    </label>
+    <label class="option-label">
+      <input type="radio" name="q${q.id}" value="2"> とてもそう思う
+    </label>
+  </div>
+`;
 
     container.appendChild(div);
 });
