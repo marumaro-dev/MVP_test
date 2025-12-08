@@ -146,9 +146,12 @@
                         )
                         .join("\n");
 
-                    const blob = new Blob([csv], {
+                    // ★ 先頭に BOM を付ける（Excel に UTF-8 だと認識させる）
+                    const bom = "\uFEFF";
+                    const blob = new Blob([bom + csv], {
                         type: "text/csv;charset=utf-8;",
                     });
+
                     const url = URL.createObjectURL(blob);
 
                     const a = document.createElement("a");

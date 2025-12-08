@@ -1,59 +1,75 @@
 <!DOCTYPE html>
 <html lang="ja">
     <head>
-        <link rel="stylesheet" href="style.css" />
-
         <meta charset="UTF-8" />
         <title>性格診断テスト（データ収集用）</title>
+        <link rel="stylesheet" href="style.css" />
     </head>
     <body>
         <div class="main-wrapper">
             <div class="card">
-                <div class="card-header">
-                    <h1 class="card-title">性格診断テスト（試験版）</h1>
-                    <p class="card-subtitle">
-                        直感で答えてください。全50問・所要時間5〜10分です。
-                    </p>
-                </div>
-
-                <form id="quiz-form">
-                    <!-- ① ニックネーム入力欄を追加 -->
-                    <div class="participant-info">
-                        <label for="nickname">ニックネーム</label>
-                        <input
-                            type="text"
-                            id="nickname"
-                            name="nickname"
-                            placeholder="例）診断始太郎"
-                        />
-                        <br />
-                        <label for="mbtiType"
-                            >現在の16Personalitiesのタイプ（必須）</label
-                        >
-                        <input
-                            type="text"
-                            id="mbtiType"
-                            name="mbtiType"
-                            placeholder="例）ENFP-A / ISTJ"
-                            required
-                        />
-                        <p class="note">
-                            ※ 16Personalities
-                            で現在出ているタイプをそのまま入力してください。
+                <main class="container">
+                    <!-- ヘッダー部分 -->
+                    <div class="card-header">
+                        <h1 class="card-title">性格診断テスト（試験版）</h1>
+                        <p class="card-subtitle">
+                            直感で答えてください。全50問・所要時間5〜10分です。
                         </p>
                     </div>
 
-                    <!-- 質問が入るコンテナ -->
-                    <div id="questions-container"></div>
+                    <!-- ★ 質問エリア（送信後は非表示にする） -->
+                    <div id="quiz-area">
+                        <form id="quiz-form">
+                            <!-- ニックネーム・MBTI入力 -->
+                            <div class="participant-info">
+                                <label for="nickname">ニックネーム</label>
+                                <input
+                                    type="text"
+                                    id="nickname"
+                                    name="nickname"
+                                    placeholder="例）診断始太郎"
+                                />
+                                <br />
+                                <label for="mbtiType">
+                                    現在の16Personalitiesのタイプ（必須）
+                                </label>
+                                <input
+                                    type="text"
+                                    id="mbtiType"
+                                    name="mbtiType"
+                                    placeholder="例）ENFP-A / ISTJ"
+                                    required
+                                />
+                                <p class="note">
+                                    ※ 16Personalities
+                                    で現在出ているタイプをそのまま入力してください。
+                                </p>
+                            </div>
 
-                    <!-- 送信ボタン -->
-                    <button type="submit" class="submit-button">
-                        結果を送信する
-                    </button>
-                </form>
+                            <!-- 質問が入るコンテナ -->
+                            <div id="questions-container"></div>
 
-                <!-- 結果表示エリア（※中身は後でJS側で差し替えます） -->
-                <div id="result"></div>
+                            <!-- 送信ボタン -->
+                            <button
+                                type="submit"
+                                id="submit-btn"
+                                class="submit-button"
+                            >
+                                結果を送信する
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- ★ サンクスエリア（最初は非表示） -->
+                    <div id="thanks-area" class="hidden">
+                        <h2>ご回答ありがとうございました</h2>
+                        <p>
+                            回答内容は、性格診断ロジックの研究・改善のためにのみ利用します。<br />
+                            今回のテスト版では、診断結果（スコアやタイプ）は表示せず、
+                            裏側で統計的に集計させていただきます。
+                        </p>
+                    </div>
+                </main>
             </div>
         </div>
 

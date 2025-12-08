@@ -38,14 +38,20 @@ const shuffled = shuffle(QUESTIONS);
 
 const container = document.getElementById("questions-container");
 
+const submitBtn = document.getElementById("submit-btn");
+const quizArea = document.getElementById("quiz-area");
+const thanksArea = document.getElementById("thanks-area");
+
 shuffled.forEach((q, index) => {
     const div = document.createElement("div");
 
-    // ← ここから追加
     div.classList.add("question");
+    // ★ 追加：テキスト内の \n を <br> に変換
+    const textHtml = q.text.replace(/\n/g, "<br>");
+
     div.innerHTML = `
     <p class="question-text">
-      <span class="question-number">${index + 1}.</span>${q.text}
+      <span class="question-number">${index + 1}.</span>${textHtml}
     </p>
     <div class="options">
       <label class="option-label">
@@ -70,7 +76,6 @@ shuffled.forEach((q, index) => {
       </label>
     </div>
   `;
-    // ← ここまでを div.innerHTML にセット
 
     container.appendChild(div);
 });
@@ -89,99 +94,99 @@ const THRESH = {
 document.getElementById("quiz-form").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // ★ ニックネーム取得（ここを追加）
-    const nicknameInput = document.getElementById("nickname");
-    const nickname = nicknameInput ? nicknameInput.value.trim() : null;
+    // ★ 二重送信防止
+    submitBtn.disabled = true;
+    submitBtn.textContent = "送信中...";
 
-    // ★ 16Personalitiesのタイプ取得（必須）
-    const mbtiInput = document.getElementById("mbtiType");
-    let mbtiType = mbtiInput ? mbtiInput.value.trim() : "";
+    try {
+        // ★ ニックネーム取得（ここを追加）
+        const nicknameInput = document.getElementById("nickname");
+        const nickname = nicknameInput ? nicknameInput.value.trim() : null;
 
-    // 入力チェック
-    if (!mbtiType) {
-        alert(
-            "現在の16Personalitiesのタイプを入力してください。（例：INFJ-T）"
-        );
-        mbtiInput.focus();
-        return;
-    }
+        // ★ 16Personalitiesのタイプ取得（必須）
+        const mbtiInput = document.getElementById("mbtiType");
+        let mbtiType = mbtiInput ? mbtiInput.value.trim() : "";
 
-    // 大文字統一（enfj-a → ENFJ-A のように）
-    mbtiType = mbtiType.toUpperCase();
-
-    // 1) 因子ごとの raw スコア集計
-    const raw = { E: 0, O: 0, C: 0, A: 0, N: 0 };
-    const answers = {};
-
-    for (const q of QUESTIONS) {
-        const name = `q${q.id}`;
-        const input = document.querySelector(`input[name="${name}"]:checked`);
-        if (!input) {
-            alert("全ての質問に回答してください。");
+        // 入力チェック
+        if (!mbtiType) {
+            alert(
+                "現在の16Personalitiesのタイプを入力してください。（例：INFJ-T）"
+            );
+            mbtiInput.focus();
+            submitBtn.disabled = false;
+            submitBtn.textContent = "結果を送信する";
             return;
         }
-        let value = Number(input.value); // -2〜+2
-        answers[q.id] = value;
 
-        if (q.direction === "-") {
-            value = -value; // 逆転
+        // 大文字統一（enfj-a → ENFJ-A のように）
+        mbtiType = mbtiType.toUpperCase();
+
+        // 1) 因子ごとの raw スコア集計
+        const raw = { E: 0, O: 0, C: 0, A: 0, N: 0 };
+        const answers = {};
+
+        for (const q of QUESTIONS) {
+            const name = `q${q.id}`;
+            const input = document.querySelector(
+                `input[name="${name}"]:checked`
+            );
+            if (!input) {
+                alert("全ての質問に回答してください。");
+                submitBtn.disabled = false;
+                submitBtn.textContent = "結果を送信する";
+                return;
+            }
+            let value = Number(input.value); // -2〜+2
+            answers[q.id] = value;
+
+            if (q.direction === "-") {
+                value = -value; // 逆転
+            }
+            raw[q.factor] += value;
         }
-        raw[q.factor] += value;
+
+        // 2) 0〜100スコア
+        const big5 = {};
+        for (const key of ["E", "O", "C", "A", "N"]) {
+            const s = raw[key];
+            big5[key] = ((s + 20) / 40) * 100;
+        }
+
+        // 3) zスコア
+        const z = {};
+        for (const key of ["E", "O", "C", "A", "N"]) {
+            z[key] = raw[key] / SIGMA;
+        }
+
+        // 4) 5文字タイプ判定
+        const EI = z.E > THRESH.EI ? "E" : "I";
+        const SN = z.O > THRESH.SN ? "N" : "S";
+        const TF = z.A > THRESH.TF ? "F" : "T";
+        const JP = z.C > THRESH.JP ? "J" : "P";
+        const AU = z.N > THRESH.AU ? "U" : "A";
+        const type5 = `${EI}${SN}${TF}${JP}${AU}`;
+
+        // 6) Firestoreに保存
+        await saveToFirestore({
+            raw,
+            big5,
+            z,
+            type5,
+            answers,
+            nickname,
+            respondentId,
+            mbtiType,
+        });
+
+        // 6) 送信完了 → 質問エリアを隠してサンクス画面を表示
+        quizArea.classList.add("hidden");
+        thanksArea.classList.remove("hidden");
+    } catch (err) {
+        console.error("保存エラー", err);
+        alert(
+            "送信中にエラーが発生しました。通信環境を確認して、もう一度お試しください。"
+        );
+        submitBtn.disabled = false;
+        submitBtn.textContent = "結果を送信する";
     }
-
-    // 2) 0〜100スコア
-    const big5 = {};
-    for (const key of ["E", "O", "C", "A", "N"]) {
-        const s = raw[key];
-        big5[key] = ((s + 20) / 40) * 100;
-    }
-
-    // 3) zスコア
-    const z = {};
-    for (const key of ["E", "O", "C", "A", "N"]) {
-        z[key] = raw[key] / SIGMA;
-    }
-
-    // 4) 5文字タイプ判定
-    const EI = z.E > THRESH.EI ? "E" : "I";
-    const SN = z.O > THRESH.SN ? "N" : "S";
-    const TF = z.A > THRESH.TF ? "F" : "T";
-    const JP = z.C > THRESH.JP ? "J" : "P";
-    const AU = z.N > THRESH.AU ? "U" : "A";
-    const type5 = `${EI}${SN}${TF}${JP}${AU}`;
-
-    // 5) 画面表示 → ★数値は見せず、メッセージだけにする
-    const resultDiv = document.getElementById("result");
-    resultDiv.innerHTML = `
-    <h2>ご回答ありがとうございました</h2>
-    <p>
-      回答内容は、性格診断ロジックの研究・改善のためにのみ利用します。<br>
-      今回のテスト版では、診断結果（スコアやタイプ）は、
-      裏側で統計的に集計させていただきます。
-    </p>
-  `;
-
-    //   // 5) 画面に表示
-    //   const resultDiv = document.getElementById("result");
-    //   resultDiv.innerHTML = `
-    //   <h2>結果</h2>
-    //   <p>外向性: ${big5.E.toFixed(1)}</p>
-    //   <p>開放性: ${big5.O.toFixed(1)}</p>
-    //   <p>誠実性: ${big5.C.toFixed(1)}</p>
-    //   <p>調和性: ${big5.A.toFixed(1)}</p>
-    //   <p>神経症: ${big5.N.toFixed(1)}</p>
-    //   <p>タイプ: <strong>${type5}</strong></p>
-    // `;
-
-    // 6) Firestoreに保存
-    await saveToFirestore({
-        raw,
-        big5,
-        z,
-        type5,
-        answers,
-        nickname,
-        respondentId,
-        mbtiType,
-    });
 });
