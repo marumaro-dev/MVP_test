@@ -34,7 +34,8 @@ function shuffle(array) {
         .map(({ v }) => v);
 }
 
-const shuffled = shuffle(QUESTIONS);
+// const shuffled = shuffle(QUESTIONS);　一次的にコメントアウト
+const questionList = QUESTIONS;
 
 const container = document.getElementById("questions-container");
 
@@ -42,7 +43,8 @@ const submitBtn = document.getElementById("submit-btn");
 const quizArea = document.getElementById("quiz-area");
 const thanksArea = document.getElementById("thanks-area");
 
-shuffled.forEach((q, index) => {
+// shuffled.forEach((q, index) => {     一次的にコメントアウト
+questionList.forEach((q, index) => {
     const div = document.createElement("div");
 
     div.classList.add("question");
