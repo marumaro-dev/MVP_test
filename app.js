@@ -9,7 +9,7 @@ async function saveToFirestore(payload) {
         nickname: payload.nickname ?? null,
         respondentId: payload.respondentId ?? null,
         mbtiType: payload.mbtiType ?? null, // 16Personalitiesのタイプ（必須）
-        version: "v1.0", // 質問票のバージョン管理用に任意で
+        version: "v1.1", // 60人基準でキャリブレーション済みロジック(2025/12/12)
     };
 
     try {
@@ -42,6 +42,23 @@ const container = document.getElementById("questions-container");
 const submitBtn = document.getElementById("submit-btn");
 const quizArea = document.getElementById("quiz-area");
 const thanksArea = document.getElementById("thanks-area");
+
+// ★ 60人分のデータから計算した「rawスコア」の平均(μ)と標準偏差(σ)
+const MEAN = {
+    E: -4.466666667, // raw_E の平均
+    O: 2.883333333, // raw_O の平均
+    C: 4.2, // raw_C の平均
+    A: 0.65, // raw_A の平均
+    N: 4.183333333, // raw_N の平均
+};
+
+const SIGMA = {
+    E: 8.83841129, // raw_E の標準偏差
+    O: 6.279079244, // raw_O の標準偏差
+    C: 6.456635005, // raw_C の標準偏差
+    A: 4.576376333, // raw_A の標準偏差
+    N: 7.393289827, // raw_N の標準偏差
+};
 
 // shuffled.forEach((q, index) => {     一次的にコメントアウト
 questionList.forEach((q, index) => {
@@ -79,14 +96,12 @@ questionList.forEach((q, index) => {
     container.appendChild(div);
 });
 
-const SIGMA = Math.sqrt(20);
-
 // 境界 z
 const THRESH = {
-    EI: 0.1,
+    EI: 0.65,
     SN: -0.29,
-    TF: -0.49,
-    JP: 0.28,
+    TF: -0.2,
+    JP: 0.25,
     AU: -0.25,
 };
 
@@ -151,10 +166,11 @@ document.getElementById("quiz-form").addEventListener("submit", async (e) => {
             big5[key] = ((s + 20) / 40) * 100;
         }
 
-        // 3) zスコア
+        // 3) zスコア（平均補正あり： z = (raw - μ) / σ）
         const z = {};
         for (const key of ["E", "O", "C", "A", "N"]) {
-            z[key] = raw[key] / SIGMA;
+            // MEAN[key], SIGMA[key] は上で定義したオブジェクトから参照
+            z[key] = (raw[key] - MEAN[key]) / SIGMA[key];
         }
 
         // 4) 5文字タイプ判定
