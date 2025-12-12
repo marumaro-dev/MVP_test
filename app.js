@@ -24,8 +24,26 @@ async function saveToFirestore(payload) {
 }
 
 // URLパラメータから user を取得
+// URLパラメータから user / from を取得
 const params = new URLSearchParams(location.search);
 const respondentId = params.get("user") || null;
+const from = params.get("from") || null;
+
+// 「アカウント表示名」ラベルを出し分け
+const nicknameLabelEl = document.getElementById("nickname-label");
+if (nicknameLabelEl) {
+    let labelText = "アカウント表示名"; // デフォルト
+
+    if (from === "croudia" || from === "craudia") {
+        labelText = "クラウディア表示名";
+    } else if (from === "crowdworks") {
+        labelText = "クラウドワークス表示名";
+    } else if (from === "shufti" || from === "shufty") {
+        labelText = "シュフティ表示名";
+    }
+
+    nicknameLabelEl.textContent = labelText;
+}
 
 function shuffle(array) {
     return array
