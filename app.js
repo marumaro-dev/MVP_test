@@ -157,6 +157,15 @@ document.getElementById("quiz-form").addEventListener("submit", async (e) => {
         const raw = { E: 0, O: 0, C: 0, A: 0, N: 0 };
         const answers = {};
 
+        // ★ 追加：因子ごとの内訳ログ
+        const debugLog = {
+            E: [],
+            O: [],
+            C: [],
+            A: [],
+            N: [],
+        };
+
         for (const q of QUESTIONS) {
             const name = `q${q.id}`;
             const input = document.querySelector(
@@ -169,13 +178,36 @@ document.getElementById("quiz-form").addEventListener("submit", async (e) => {
                 return;
             }
             let value = Number(input.value); // -2〜+2
+
+            // 元の値を保存しておく（逆転前）
+            const originalValue = value;
+
             answers[q.id] = value;
 
             if (q.direction === "-") {
                 value = -value; // 逆転
             }
             raw[q.factor] += value;
+
+            // ★ 追加：内訳ログに記録
+            debugLog[q.factor].push({
+                id: q.id,
+                direction: q.direction, // "+" or "-"
+                original: originalValue, // 回答そのもの（-2〜+2）
+                used: value, // 逆転後に実際に足した値
+            });
         }
+
+        // ★ 追加：因子ごとの内訳をコンソールに表示
+        console.group("診断スコア 内訳ログ");
+        console.log("raw 合計値:", raw);
+
+        for (const key of ["E", "O", "C", "A", "N"]) {
+            console.group(`因子 ${key} の内訳`);
+            console.table(debugLog[key]);
+            console.groupEnd();
+        }
+        console.groupEnd();
 
         // 2) 0〜100スコア
         const big5 = {};
